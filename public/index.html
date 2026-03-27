@@ -362,7 +362,7 @@ async function startGame(){
     rebuildWinBadges();
   } catch(err){
     console.error('Login error:',err);
-    showToast('Error loading game. Please try again.');
+    showToast('Error: '+(err.message||JSON.stringify(err)));
     btn.disabled=false;
     btn.textContent='Start Playing →';
   }
