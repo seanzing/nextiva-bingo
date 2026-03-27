@@ -240,7 +240,7 @@ textarea:focus{border-color:var(--blue)}
 const SUPABASE_URL = 'https://jspwvjldgarzwzkigmgm.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpzcHd2amxkZ2Fyend6a2lnbWdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MzI0OTgsImV4cCI6MjA5MDIwODQ5OH0.5Z4sztJFU9h5fWltRhOr4NwcSVEUmlOhRDquDKFWXUA';
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // =============================================
 // TASKS & WIN CONDITIONS
@@ -319,7 +319,7 @@ async function startGame(){
 
   try{
     // Try to load existing player
-    const {data:existing,error:fetchErr}=await supabase
+    const {data:existing,error:fetchErr}=await sb
       .from('players')
       .select('*')
       .eq('email',email)
@@ -336,12 +336,12 @@ async function startGame(){
 
       // If name changed, update it
       if(existing.name!==name){
-        await supabase.from('players').update({name}).eq('email',email);
+        await sb.from('players').update({name}).eq('email',email);
         playerName=name;
       }
     } else {
       // New player — insert
-      const {error:insertErr}=await supabase.from('players').insert({
+      const {error:insertErr}=await sb.from('players').insert({
         email,
         name,
       });
@@ -382,7 +382,7 @@ async function saveSettings(){
   const n=document.getElementById('editName').value.trim();
   if(n&&n!==playerName){
     playerName=n;
-    await supabase.from('players').update({name:n}).eq('email',playerEmail);
+    await sb.from('players').update({name:n}).eq('email',playerEmail);
   }
   document.getElementById('playerDisplay').textContent='Playing as '+playerName;
   document.getElementById('settingsOverlay').style.display='none';
@@ -458,7 +458,7 @@ async function checkBingo(){
 
   if(newWins.length){
     // Update bingos_won in DB
-    await supabase.from('players')
+    await sb.from('players')
       .update({bingos_won:Array.from(wonSet)})
       .eq('email',playerEmail);
 
@@ -489,7 +489,7 @@ async function checkBingo(){
 // =============================================
 async function sendBingoEmail(winType,winningCells){
   try{
-    const {data,error}=await supabase.functions.invoke('send-bingo-email',{
+    const {data,error}=await sb.functions.invoke('send-bingo-email',{
       body:{
         playerEmail,
         playerName,
@@ -592,7 +592,7 @@ async function markDone(){
     // 1. Upload files to Supabase Storage
     for(const file of files){
       const path=`${playerEmail}/${selIdx}/${file.name}`;
-      const {error:upErr}=await supabase.storage
+      const {error:upErr}=await sb.storage
         .from('proof-files')
         .upload(path,file,{upsert:true});
       if(upErr) throw upErr;
@@ -600,7 +600,7 @@ async function markDone(){
 
     // 2. Update cells + comments in DB
     // Fetch current state first
-    const {data:player,error:fetchErr}=await supabase
+    const {data:player,error:fetchErr}=await sb
       .from('players')
       .select('cells,comments')
       .eq('email',playerEmail)
@@ -613,7 +613,7 @@ async function markDone(){
     const newComments=[...player.comments];
     newComments[selIdx]=text;
 
-    const {error:updateErr}=await supabase
+    const {error:updateErr}=await sb
       .from('players')
       .update({cells:newCells,comments:newComments})
       .eq('email',playerEmail);
