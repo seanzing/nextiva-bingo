@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XBERT Bingo — Nextiva</title>
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --blue:#1A56DB;
+  --blue-dark:#1040A8;
+  --blue-light:#E8F0FE;
+  --navy:#001233;
+  --navy-mid:#0A1F3C;
+  --navy-card:rgba(255,255,255,0.07);
+  --yellow:#FFD100;
+  --yellow-dark:#C8A400;
+  --red:#D0021B;
+  --white:#FFFFFF;
+  --text-on-navy:rgba(255,255,255,0.9);
+  --text-muted:rgba(255,255,255,0.5);
+}
+html{height:100%}
+body{font-family:'Work Sans',sans-serif;background:var(--navy);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:0 0 60px;color:#1a2b2a}
+
+/* ========== SETUP SCREEN ========== */
+#setupScreen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;width:100%;padding:40px 20px;animation:fade-in 0.4s ease}
+.setup-card{background:var(--white);border-radius:20px;padding:40px 36px;max-width:480px;width:100%;box-shadow:0 24px 80px rgba(0,0,0,0.4)}
+.setup-logo{text-align:center;margin-bottom:28px}
+.setup-logo .nv-wordmark{font-size:14px;font-weight:800;color:var(--navy);letter-spacing:3px;text-transform:uppercase;opacity:0.5;margin-bottom:6px}
+.setup-logo .game-name{font-size:42px;font-weight:900;color:var(--navy);letter-spacing:12px;line-height:1}
+.setup-logo .game-name .dot{color:var(--blue)}
+.setup-logo .tagline{font-size:12px;color:#6a88a0;font-weight:600;letter-spacing:1px;margin-top:6px}
+.setup-divider{height:1px;background:linear-gradient(90deg,transparent,#d8e4f0,transparent);margin:24px 0}
+.setup-field{margin-bottom:18px}
+.setup-field label{display:block;font-size:12px;font-weight:700;color:#2a4a6a;letter-spacing:1px;text-transform:uppercase;margin-bottom:7px}
+.setup-field input{width:100%;border:1.5px solid #c8daea;border-radius:10px;padding:12px 14px;font-family:'Work Sans',sans-serif;font-size:15px;color:var(--navy);outline:none;transition:border-color 0.15s;background:#f7fafd}
+.setup-field input:focus{border-color:var(--blue);background:#fff}
+.setup-hint{font-size:11.5px;color:#7a9ab5;margin-top:5px;font-weight:500}
+.btn-start{width:100%;background:var(--blue);color:#fff;border:none;border-radius:12px;padding:15px;font-family:'Work Sans',sans-serif;font-size:16px;font-weight:800;cursor:pointer;letter-spacing:0.5px;transition:background 0.15s,transform 0.1s;margin-top:6px}
+.btn-start:hover{background:var(--blue-dark)}
+.btn-start:active{transform:scale(0.98)}
+.btn-start:disabled{background:#90a8d0;cursor:not-allowed}
+
+/* ========== GAME SCREEN ========== */
+#gameScreen{display:none;flex-direction:column;align-items:center;width:100%;padding:24px 16px 0;animation:fade-in 0.4s ease}
+@keyframes fade-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+.top-bar{display:flex;align-items:center;justify-content:space-between;width:100%;max-width:700px;margin-bottom:16px}
+.top-left .nv-label{font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase}
+.player-name-display{font-size:15px;font-weight:700;color:var(--text-on-navy)}
+.btn-settings{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:var(--text-muted);border-radius:8px;padding:7px 13px;font-family:'Work Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:background 0.15s}
+.btn-settings:hover{background:rgba(255,255,255,0.15);color:#fff}
+
+.title-block{text-align:center;margin-bottom:18px}
+.game-title{font-size:clamp(50px,10vw,82px);font-weight:900;color:#fff;letter-spacing:14px;line-height:1}
+.game-title .dot{color:var(--blue)}
+.game-subtitle{font-size:11.5px;color:var(--text-muted);letter-spacing:1px;margin-top:4px;font-weight:600}
+
+.board-wrap{background:rgba(255,255,255,0.04);border-radius:16px;padding:14px;border:1px solid rgba(26,86,219,0.25);width:100%;max-width:700px}
+.col-headers{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:6px}
+.col-header{font-size:clamp(26px,5vw,40px);font-weight:900;color:#fff;text-align:center;line-height:1;letter-spacing:2px}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+
+.cell{background:rgba(255,255,255,0.92);border-radius:9px;padding:9px 7px;min-height:90px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:clamp(8.5px,1.35vw,10.5px);font-weight:700;color:#0a1f3c;cursor:pointer;border:2px solid transparent;position:relative;transition:transform 0.15s,border-color 0.15s,background 0.15s;line-height:1.35;user-select:none}
+.cell:hover:not(.done):not(.free){background:#fff;border-color:var(--blue);transform:scale(1.025)}
+.cell.free{background:var(--blue);color:#fff;font-size:15px;font-weight:900;letter-spacing:1px;text-transform:uppercase;cursor:default;border-color:rgba(255,255,255,0.2)}
+.cell.done{background:#fdf0f0;cursor:default;border-color:#f8c8c8;pointer-events:none}
+.cell-text{position:relative;z-index:1}
+.cell.done .cell-text{opacity:0.35;text-decoration:line-through;font-size:clamp(7.5px,1.1vw,9.5px)}
+
+.red-x{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:2}
+.red-x svg{width:50%;height:50%}
+
+.cell.bingo-win{border-color:var(--yellow) !important;background:#fffbe5 !important;animation:pulse-win 1.3s ease-in-out infinite}
+.cell.bingo-win.done{background:#fff8cc !important}
+@keyframes pulse-win{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
+
+.wins-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:14px}
+.win-badge{background:var(--yellow);color:#3a2800;font-size:13px;font-weight:800;letter-spacing:1px;padding:5px 14px;border-radius:20px;text-transform:uppercase;animation:badge-pop 0.4s cubic-bezier(0.34,1.56,0.64,1)}
+@keyframes badge-pop{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+
+.stats-bar{display:flex;justify-content:center;gap:28px;margin-top:14px;color:var(--text-muted);font-size:13px;font-weight:600}
+.stats-bar strong{color:#fff}
+
+/* ========== BINGO BANNER ========== */
+.bingo-banner{position:fixed;top:0;left:0;right:0;background:var(--yellow);color:#2a1800;text-align:center;padding:12px 20px;font-size:28px;font-weight:900;letter-spacing:4px;z-index:400;transform:translateY(-100%);transition:transform 0.45s cubic-bezier(0.34,1.56,0.64,1)}
+.bingo-banner.show{transform:translateY(0)}
+.bingo-banner small{display:block;font-size:14px;font-weight:700;letter-spacing:2px;opacity:0.7}
+
+/* ========== MODAL ========== */
+.overlay{position:fixed;inset:0;background:rgba(0,0,30,0.8);display:flex;align-items:center;justify-content:center;z-index:200;padding:16px}
+.modal{background:#fff;border-radius:16px;padding:26px 26px 22px;max-width:500px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,0.5);animation:modal-in 0.22s ease}
+@keyframes modal-in{from{transform:translateY(14px);opacity:0}to{transform:translateY(0);opacity:1}}
+.m-tag{font-size:10.5px;font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:7px}
+.m-task{font-size:17px;font-weight:800;color:var(--navy);margin-bottom:18px;line-height:1.4}
+.m-label{font-size:11.5px;font-weight:700;color:#3a5a7a;text-transform:uppercase;letter-spacing:1px;margin-bottom:7px;display:block}
+
+.upload-zone{border:2px dashed #b8d0ea;border-radius:10px;padding:16px 12px;text-align:center;cursor:pointer;transition:border-color 0.15s,background 0.15s;background:#f5f9fd;margin-bottom:14px}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--blue);background:#eaf1fc}
+.upload-zone input[type=file]{display:none}
+.upload-zone.has-file{border-color:#2ecc71;background:#eafaf1}
+.uz-icon{font-size:20px;margin-bottom:5px}
+.uz-text{font-size:13px;color:#5a82a0;font-weight:600}
+.uz-text u{color:var(--blue);cursor:pointer;text-decoration:underline}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;justify-content:center}
+.chip{display:flex;align-items:center;gap:5px;background:var(--blue-light);border:1px solid #a8c4f0;border-radius:20px;padding:3px 10px;font-size:11.5px;color:#0a2a6a;font-weight:700;max-width:180px}
+.chip .cn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip .cx{cursor:pointer;opacity:0.5;font-size:14px;line-height:1;flex-shrink:0}
+.chip .cx:hover{opacity:1}
+
+textarea{width:100%;border:1.5px solid #c0d8ee;border-radius:10px;padding:11px 13px;font-family:'Work Sans',sans-serif;font-size:13.5px;color:var(--navy);resize:none;outline:none;min-height:80px;background:#f7fafd;transition:border-color 0.15s}
+textarea:focus{border-color:var(--blue)}
+
+.m-actions{display:flex;gap:10px;margin-top:14px}
+.btn-ok{flex:1;background:var(--blue);color:#fff;border:none;border-radius:10px;padding:12px;font-family:'Work Sans',sans-serif;font-size:14px;font-weight:800;cursor:pointer;transition:background 0.15s}
+.btn-ok:hover{background:var(--blue-dark)}
+.btn-ok:disabled{background:#90a8d0;cursor:not-allowed}
+.btn-cancel{background:transparent;color:#8aaac8;border:1.5px solid #c0d8ee;border-radius:10px;padding:12px 16px;font-family:'Work Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:border-color 0.15s,color 0.15s}
+.btn-cancel:hover{border-color:#8aaac8;color:#3a5a7a}
+
+.upload-error{color:var(--red);font-size:12px;font-weight:600;margin-top:4px}
+
+/* ========== TOAST ========== */
+.toast{position:fixed;bottom:28px;right:28px;background:var(--navy-mid);border:1px solid rgba(26,86,219,0.4);color:#fff;padding:14px 20px;border-radius:12px;font-size:13px;font-weight:600;z-index:500;transform:translateY(80px);opacity:0;transition:transform 0.35s,opacity 0.35s;max-width:320px;line-height:1.5}
+.toast.show{transform:translateY(0);opacity:1}
+
+/* ========== LOADING SPINNER ========== */
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.6s linear infinite;margin-right:8px;vertical-align:middle}
+.spinner.dark{border-color:rgba(0,0,0,0.15);border-top-color:var(--blue)}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- BINGO BANNER -->
+<div class="bingo-banner" id="banner">
+  BINGO!
+  <small id="bannerSub"></small>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ========== SETUP SCREEN ========== -->
+<div id="setupScreen">
+  <div class="setup-card">
+    <div class="setup-logo">
+      <div class="nv-wordmark">nextiva</div>
+      <div class="game-name">X<span class="dot">&middot;</span>B<span class="dot">&middot;</span>E<span class="dot">&middot;</span>R<span class="dot">&middot;</span>T</div>
+      <div class="tagline">Sales Challenge &middot; Bingo Game</div>
+    </div>
+    <div class="setup-divider"></div>
+    <div class="setup-field">
+      <label>Your name</label>
+      <input type="text" id="playerNameInput" placeholder="e.g. Sarah Johnson" autocomplete="off">
+    </div>
+    <div class="setup-field">
+      <label>Your email address</label>
+      <input type="email" id="playerEmailInput" placeholder="e.g. sarah@yourcompany.com" autocomplete="off">
+      <div class="setup-hint">Use the same email each time to resume your progress.</div>
+    </div>
+    <button class="btn-start" id="btnStart" onclick="startGame()">Start Playing &rarr;</button>
+  </div>
+</div>
+
+<!-- ========== GAME SCREEN ========== -->
+<div id="gameScreen">
+  <div class="top-bar">
+    <div class="top-left">
+      <div class="nv-label">nextiva</div>
+      <div class="player-name-display" id="playerDisplay"></div>
+    </div>
+    <button class="btn-settings" onclick="showSettings()">&#9881; Settings</button>
+  </div>
+
+  <div class="title-block">
+    <div class="game-title">X<span class="dot">&middot;</span>B<span class="dot">&middot;</span>E<span class="dot">&middot;</span>R<span class="dot">&middot;</span>T</div>
+    <div class="game-subtitle">Click a square &middot; Add a comment &middot; Upload proof &middot; Win</div>
+  </div>
+
+  <div class="board-wrap">
+    <div class="col-headers">
+      <div class="col-header">X</div><div class="col-header">B</div>
+      <div class="col-header">E</div><div class="col-header">R</div>
+      <div class="col-header">T</div>
+    </div>
+    <div class="grid" id="grid"></div>
+    <div class="wins-row" id="winsRow"></div>
+    <div class="stats-bar">
+      Completed: <strong id="doneCount">1</strong>/25 &nbsp;|&nbsp; Bingos: <strong id="bingoCount">0</strong>
+    </div>
+  </div>
+</div>
+
+<!-- ========== TASK MODAL ========== -->
+<div class="overlay" id="overlay" style="display:none">
+  <div class="modal">
+    <div class="m-tag">Complete this task</div>
+    <div class="m-task" id="mTask"></div>
+    <label class="m-label">Add a comment <span style="text-transform:none;letter-spacing:0;font-weight:500">(required)</span></label>
+    <textarea id="desc" placeholder="e.g. Closed a $750 MRR deal with ABC Corp on March 10 with XBert included..." rows="3"></textarea>
+    <label class="m-label" style="margin-top:14px">Upload proof screenshot <span style="text-transform:none;letter-spacing:0;font-weight:500">(required)</span></label>
+    <div class="upload-zone" id="uz">
+      <input type="file" id="fInput" multiple accept="image/*,.pdf,.doc,.docx,.txt">
+      <div class="uz-icon">&#128206;</div>
+      <div class="uz-text">Drop files here or <u onclick="document.getElementById('fInput').click()">browse</u></div>
+      <div class="chips" id="chips"></div>
+    </div>
+    <div id="uploadError" class="upload-error" style="display:none"></div>
+    <div class="m-actions" style="margin-top:14px">
+      <button class="btn-ok" id="markBtn" onclick="markDone()">Mark as complete &#10003;</button>
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== SETTINGS MODAL ========== -->
+<div class="overlay" id="settingsOverlay" style="display:none">
+  <div class="modal">
+    <div class="m-tag">Game settings</div>
+    <div style="font-size:17px;font-weight:800;color:var(--navy);margin-bottom:18px">Update your details</div>
+    <div class="setup-field">
+      <label style="font-size:11.5px;font-weight:700;color:#3a5a7a;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:7px">Your name</label>
+      <input type="text" id="editName" style="width:100%;border:1.5px solid #c0d8ee;border-radius:10px;padding:12px 14px;font-family:'Work Sans',sans-serif;font-size:15px;color:var(--navy);outline:none;background:#f7fafd">
+    </div>
+    <div class="m-actions" style="margin-top:18px">
+      <button class="btn-ok" onclick="saveSettings()">Save changes</button>
+      <button class="btn-cancel" onclick="document.getElementById('settingsOverlay').style.display='none'">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// =============================================
+// CONFIG — Replace with your Supabase project values
+// =============================================
+const SUPABASE_URL = 'https://jspwvjldgarzwzkigmgm.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_42oZGCIJ5C1y1iBCJoVE5A_1GbjvSWi';
+
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// =============================================
+// TASKS & WIN CONDITIONS
+// =============================================
+const TASKS=[
+  "Revive one closed lost opportunity",
+  "Close a deal over $500 MRR",
+  "Send XBert email campaign through NexConnect",
+  "Quote 5 new deals with XBert attached",
+  "Close a deal with XBert included",
+  "Complete XBert Sales Certification course",
+  "Generate $2,500+ MRR Pipeline 3 months in a row",
+  "Close a deal over $1,000 MRR",
+  "Hold a demo meeting with a prospect 30 days after the event",
+  "Generate $2,500+ MRR Pipeline 2 months in a row",
+  "Quote an NCC deal over $1,000 MRR",
+  "Post photo of you and your channel manager to LinkedIn",
+  "FREE SPACE",
+  "Complete NCC Sales Certification course",
+  "Schedule a partner or customer testimonial video session",
+  "Post about a Nextiva event on LinkedIn with photo/video",
+  "Add Nextiva to your email signature or website",
+  "Schedule a planning meeting with Channel Marketing",
+  "Send a verticalized email campaign for XBert",
+  "Post about XBert on LinkedIn",
+  "Quote a new deal three days in a row",
+  "Create 10 demo bots for prospects",
+  "Co-brand a XBert asset in NexConnect with your logo",
+  "Launch an XBert webinar with your prospects and customers",
+  "Quote an XBert deal over $1,000 MRR"
+];
+
+const FREE=12;
+
+// Win conditions: rows, columns, diagonals only
+const WIN_GROUPS={
+  "Row 1":[0,1,2,3,4],
+  "Row 2":[5,6,7,8,9],
+  "Row 3":[10,11,12,13,14],
+  "Row 4":[15,16,17,18,19],
+  "Row 5":[20,21,22,23,24],
+  "Column 1":[0,5,10,15,20],
+  "Column 2":[1,6,11,16,21],
+  "Column 3":[2,7,12,17,22],
+  "Column 4":[3,8,13,18,23],
+  "Column 5":[4,9,14,19,24],
+  "Diagonal ↘":[0,6,12,18,24],
+  "Diagonal ↗":[4,8,12,16,20]
+};
+
+// Flat map for highlight tracking
+const wonCells={};
+
+let playerName='';
+let playerEmail='';
+let done=new Set([FREE]);
+let wonSet=new Set();
+let selIdx=null;
+let files=[];
+
+// =============================================
+// SETUP / LOGIN
+// =============================================
+async function startGame(){
+  const name=document.getElementById('playerNameInput').value.trim();
+  const email=document.getElementById('playerEmailInput').value.trim().toLowerCase();
+  if(!name){document.getElementById('playerNameInput').focus();return;}
+  if(!email||!email.includes('@')){document.getElementById('playerEmailInput').focus();return;}
+
+  const btn=document.getElementById('btnStart');
+  btn.disabled=true;
+  btn.innerHTML='<span class="spinner"></span>Loading...';
+
+  playerName=name;
+  playerEmail=email;
+
+  try{
+    // Try to load existing player
+    const {data:existing,error:fetchErr}=await supabase
+      .from('players')
+      .select('*')
+      .eq('email',email)
+      .maybeSingle();
+
+    if(fetchErr) throw fetchErr;
+
+    if(existing){
+      // Returning player — load state
+      playerName=existing.name;
+      done=new Set([FREE]);
+      existing.cells.forEach((v,i)=>{if(v) done.add(i);});
+      wonSet=new Set(existing.bingos_won||[]);
+
+      // If name changed, update it
+      if(existing.name!==name){
+        await supabase.from('players').update({name}).eq('email',email);
+        playerName=name;
+      }
+    } else {
+      // New player — insert
+      const {error:insertErr}=await supabase.from('players').insert({
+        email,
+        name,
+      });
+      if(insertErr) throw insertErr;
+      done=new Set([FREE]);
+      wonSet=new Set();
+    }
+
+    // Rebuild wonCells from wonSet
+    wonSet.forEach(k=>{
+      if(WIN_GROUPS[k]) wonCells[k]=WIN_GROUPS[k];
+    });
+
+    document.getElementById('playerDisplay').textContent='Playing as '+playerName;
+    document.getElementById('setupScreen').style.display='none';
+    document.getElementById('gameScreen').style.display='flex';
+    buildGrid();
+    rebuildWinBadges();
+  } catch(err){
+    console.error('Login error:',err);
+    showToast('Error loading game. Please try again.');
+    btn.disabled=false;
+    btn.textContent='Start Playing →';
+  }
+}
+
+document.getElementById('playerNameInput').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('playerEmailInput').focus();});
+document.getElementById('playerEmailInput').addEventListener('keydown',e=>{if(e.key==='Enter')startGame();});
+
+// =============================================
+// SETTINGS
+// =============================================
+function showSettings(){
+  document.getElementById('editName').value=playerName;
+  document.getElementById('settingsOverlay').style.display='flex';
+}
+async function saveSettings(){
+  const n=document.getElementById('editName').value.trim();
+  if(n&&n!==playerName){
+    playerName=n;
+    await supabase.from('players').update({name:n}).eq('email',playerEmail);
+  }
+  document.getElementById('playerDisplay').textContent='Playing as '+playerName;
+  document.getElementById('settingsOverlay').style.display='none';
+  showToast('Settings saved');
+}
+
+// =============================================
+// GRID
+// =============================================
+function buildGrid(){
+  const g=document.getElementById('grid');
+  g.innerHTML='';
+  TASKS.forEach((t,i)=>{
+    const c=document.createElement('div');
+    const isFree=i===FREE;
+    const isDone=done.has(i);
+    c.id='c'+i;
+    c.className='cell'+(isFree?' free':'')+(isDone&&!isFree?' done':'');
+    const span=document.createElement('span');
+    span.className='cell-text';
+    span.textContent=t;
+    c.appendChild(span);
+    if(isDone&&!isFree){
+      const x=document.createElement('div');
+      x.className='red-x';
+      x.innerHTML='<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><line x1="5" y1="5" x2="35" y2="35" stroke="#D0021B" stroke-width="6" stroke-linecap="round"/><line x1="35" y1="5" x2="5" y2="35" stroke="#D0021B" stroke-width="6" stroke-linecap="round"/></svg>';
+      c.appendChild(x);
+    }
+    if(!isFree&&!isDone) c.onclick=()=>openModal(i);
+    g.appendChild(c);
+  });
+  highlightWins();
+  updateStats();
+}
+
+function highlightWins(){
+  document.querySelectorAll('.cell.bingo-win').forEach(c=>c.classList.remove('bingo-win'));
+  Object.values(wonCells).forEach(cells=>cells.forEach(i=>{
+    const el=document.getElementById('c'+i);
+    if(el) el.classList.add('bingo-win');
+  }));
+}
+
+function updateStats(){
+  document.getElementById('doneCount').textContent=done.size;
+  document.getElementById('bingoCount').textContent=wonSet.size;
+}
+
+function rebuildWinBadges(){
+  const row=document.getElementById('winsRow');
+  row.innerHTML='';
+  wonSet.forEach(k=>{
+    const b=document.createElement('div');
+    b.className='win-badge';
+    b.textContent='🏆 '+k;
+    row.appendChild(b);
+  });
+}
+
+// =============================================
+// BINGO CHECK
+// =============================================
+async function checkBingo(){
+  let newWins=[];
+  Object.entries(WIN_GROUPS).forEach(([groupKey,cells])=>{
+    if(wonSet.has(groupKey)) return;
+    if(cells.every(i=>done.has(i))){
+      wonSet.add(groupKey);
+      wonCells[groupKey]=cells;
+      newWins.push(groupKey);
+    }
+  });
+
+  if(newWins.length){
+    // Update bingos_won in DB
+    await supabase.from('players')
+      .update({bingos_won:Array.from(wonSet)})
+      .eq('email',playerEmail);
+
+    newWins.forEach(k=>{
+      const b=document.createElement('div');
+      b.className='win-badge';
+      b.textContent='🏆 '+k;
+      document.getElementById('winsRow').appendChild(b);
+    });
+
+    const last=newWins[newWins.length-1];
+    document.getElementById('bannerSub').textContent=last;
+    const banner=document.getElementById('banner');
+    banner.classList.add('show');
+    setTimeout(()=>banner.classList.remove('show'),4500);
+    highlightWins();
+    updateStats();
+
+    // Send bingo email for each new win
+    for(const winType of newWins){
+      sendBingoEmail(winType,WIN_GROUPS[winType]);
+    }
+  }
+}
+
+// =============================================
+// BINGO EMAIL (via Edge Function)
+// =============================================
+async function sendBingoEmail(winType,winningCells){
+  try{
+    const {data,error}=await supabase.functions.invoke('send-bingo-email',{
+      body:{
+        playerEmail,
+        playerName,
+        winType,
+        winningCells,
+      }
+    });
+    if(error) throw error;
+    showToast('Bingo notification sent to Channel Marketing!');
+  } catch(err){
+    console.error('Email send error:',err);
+    showToast('Bingo achieved! (Email notification failed — contact your admin)');
+  }
+}
+
+// =============================================
+// TOAST
+// =============================================
+let toastTimer=null;
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.innerHTML=msg;
+  t.classList.add('show');
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+// =============================================
+// MODAL
+// =============================================
+function openModal(i){
+  selIdx=i; files=[];
+  document.getElementById('mTask').textContent=TASKS[i];
+  document.getElementById('desc').value='';
+  document.getElementById('chips').innerHTML='';
+  document.getElementById('fInput').value='';
+  document.getElementById('uploadError').style.display='none';
+  document.getElementById('uz').classList.remove('has-file');
+  document.getElementById('markBtn').disabled=false;
+  document.getElementById('markBtn').textContent='Mark as complete ✓';
+  document.getElementById('overlay').style.display='flex';
+  setTimeout(()=>document.getElementById('desc').focus(),120);
+}
+function closeModal(){
+  document.getElementById('overlay').style.display='none';
+  selIdx=null; files=[];
+}
+
+// =============================================
+// FILE HANDLING
+// =============================================
+document.getElementById('fInput').addEventListener('change',e=>addFiles(e.target.files));
+const uz=document.getElementById('uz');
+uz.addEventListener('dragover',e=>{e.preventDefault();uz.classList.add('drag');});
+uz.addEventListener('dragleave',()=>uz.classList.remove('drag'));
+uz.addEventListener('drop',e=>{e.preventDefault();uz.classList.remove('drag');addFiles(e.dataTransfer.files);});
+
+function addFiles(list){
+  Array.from(list).forEach(f=>{
+    if(!files.find(x=>x.name===f.name)){
+      files.push(f);
+      const id='chip_'+f.name.replace(/\W/g,'_');
+      const chip=document.createElement('div');
+      chip.className='chip'; chip.id=id;
+      chip.innerHTML='<span class="cn">'+f.name+'</span><span class="cx" onclick="rmFile(\''+f.name.replace(/'/g,"\\'")+'\',\''+id+'\')">×</span>';
+      document.getElementById('chips').appendChild(chip);
+    }
+  });
+  if(files.length>0){
+    document.getElementById('uz').classList.add('has-file');
+    document.getElementById('uploadError').style.display='none';
+  }
+}
+
+function rmFile(name,id){
+  files=files.filter(f=>f.name!==name);
+  const el=document.getElementById(id); if(el) el.remove();
+  if(files.length===0) document.getElementById('uz').classList.remove('has-file');
+}
+
+// =============================================
+// MARK DONE — save to DB + upload files
+// =============================================
+async function markDone(){
+  const text=document.getElementById('desc').value.trim();
+  if(!text){document.getElementById('desc').focus();return;}
+
+  // Require file upload
+  if(files.length===0){
+    document.getElementById('uploadError').textContent='Please upload at least one proof file (screenshot, PDF, etc.)';
+    document.getElementById('uploadError').style.display='block';
+    return;
+  }
+
+  const btn=document.getElementById('markBtn');
+  btn.disabled=true;
+  btn.innerHTML='<span class="spinner dark"></span>Saving...';
+
+  try{
+    // 1. Upload files to Supabase Storage
+    for(const file of files){
+      const path=`${playerEmail}/${selIdx}/${file.name}`;
+      const {error:upErr}=await supabase.storage
+        .from('proof-files')
+        .upload(path,file,{upsert:true});
+      if(upErr) throw upErr;
+    }
+
+    // 2. Update cells + comments in DB
+    // Fetch current state first
+    const {data:player,error:fetchErr}=await supabase
+      .from('players')
+      .select('cells,comments')
+      .eq('email',playerEmail)
+      .single();
+    if(fetchErr) throw fetchErr;
+
+    const newCells=[...player.cells];
+    newCells[selIdx]=true;
+
+    const newComments=[...player.comments];
+    newComments[selIdx]=text;
+
+    const {error:updateErr}=await supabase
+      .from('players')
+      .update({cells:newCells,comments:newComments})
+      .eq('email',playerEmail);
+    if(updateErr) throw updateErr;
+
+    // 3. Update local state
+    done.add(selIdx);
+    closeModal();
+    buildGrid();
+    await checkBingo();
+
+  } catch(err){
+    console.error('Save error:',err);
+    showToast('Error saving. Please try again.');
+    btn.disabled=false;
+    btn.textContent='Mark as complete ✓';
+  }
+}
+
+// =============================================
+// KEYBOARD / CLICK OUTSIDE
+// =============================================
+document.getElementById('overlay').addEventListener('click',e=>{if(e.target.id==='overlay')closeModal();});
+document.getElementById('settingsOverlay').addEventListener('click',e=>{if(e.target.id==='settingsOverlay')document.getElementById('settingsOverlay').style.display='none';});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    closeModal();
+    document.getElementById('settingsOverlay').style.display='none';
+  }
+});
+</script>
+</body>
+</html>
