@@ -594,7 +594,8 @@ async function markDone(){
   try{
     // 1. Upload files to Supabase Storage
     for(const file of files){
-      const path=`${playerEmail}/${selIdx}/${file.name}`;
+      const safeEmail=playerEmail.replace('@','_at_').replace(/\./g,'_');
+      const path=`${safeEmail}/${selIdx}/${file.name}`;
       const {error:upErr}=await sb.storage
         .from('proof-files')
         .upload(path,file,{upsert:true});
