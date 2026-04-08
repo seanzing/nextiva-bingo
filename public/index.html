@@ -4,14 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>XBERT Bingo — Nextiva</title>
-<link rel="stylesheet" href="https://static.lingoapp.com/fonts/117691/Sohne-20250910.css">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
+@font-face{font-family:'Arizona Mix';src:url('ABCArizonaMixVariable-Regular.ttf') format('truetype-variations'),url('ABCArizonaMixVariable-Regular.ttf') format('truetype');font-weight:100 900;font-style:normal;font-display:swap}
+@font-face{font-family:'Space Grotesk';src:url('SpaceGrotesk-VariableFont_wght.ttf') format('truetype-variations'),url('SpaceGrotesk-VariableFont_wght.ttf') format('truetype');font-weight:100 900;font-style:normal;font-display:swap}
+@font-face{font-family:'Space Grotesk';src:url('SpaceGrotesk-Medium.ttf') format('truetype');font-weight:500;font-style:normal;font-display:swap}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --blue:#3758F9;
-  --blue-dark:#143BF7;
+  --blue:#0062b8;
+  --blue-dark:#004a8c;
   --blue-light:#CDD5FD;
   --navy:#000209;
   --navy-mid:#00092C;
@@ -26,23 +27,24 @@
   --text-muted:rgba(255,255,255,0.5);
 }
 html{height:100%}
-body{font-family:'Sohne','Space Grotesk',sans-serif;background:var(--dark);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:0 0 60px;color:#1a2b2a}
+body{font-family:'Space Grotesk',sans-serif;background:var(--dark);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:0 0 60px;color:#1a2b2a;position:relative}
+#bgVideo{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:-2}
+#bgOverlay{position:fixed;inset:0;background:linear-gradient(180deg,rgba(2,18,44,0.55) 0%,rgba(0,9,44,0.7) 100%);z-index:-1}
 
 /* ========== SETUP SCREEN ========== */
-#setupScreen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;width:100%;padding:40px 20px;animation:fade-in 0.4s ease;background:linear-gradient(180deg,var(--dark) 0%,var(--navy-mid) 100%)}
-.setup-card{background:var(--white);border-radius:20px;padding:40px 36px;max-width:480px;width:100%;box-shadow:0 24px 80px rgba(0,0,0,0.4);border:1px solid rgba(55,88,249,0.1)}
+#setupScreen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;width:100%;padding:40px 20px;animation:fade-in 0.4s ease}
+.setup-card{background:rgba(255,255,255,0.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:20px;padding:40px 36px;max-width:480px;width:100%;box-shadow:0 24px 80px rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.4)}
+.xbert-logo{display:block;max-width:180px;height:auto;margin:0 auto}
+.xbert-logo-sm{display:block;max-width:160px;height:auto;margin:0 auto}
 .setup-logo{text-align:center;margin-bottom:28px}
-.setup-logo .nv-wordmark{font-size:14px;font-weight:800;color:var(--navy);letter-spacing:3px;text-transform:uppercase;opacity:0.5;margin-bottom:6px}
-.setup-logo .game-name{font-size:42px;font-weight:900;color:var(--navy);letter-spacing:12px;line-height:1}
-.setup-logo .game-name .dot{color:var(--blue)}
-.setup-logo .tagline{font-size:12px;color:#6a88a0;font-weight:600;letter-spacing:1px;margin-top:6px}
+.setup-logo .bingo-word{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;color:var(--blue);letter-spacing:7px;line-height:1;margin-top:14px;text-transform:uppercase;padding-left:7px}
 .setup-divider{height:1px;background:linear-gradient(90deg,transparent,#CDD5FD,transparent);margin:24px 0}
 .setup-field{margin-bottom:18px}
 .setup-field label{display:block;font-size:12px;font-weight:700;color:#2a4a6a;letter-spacing:1px;text-transform:uppercase;margin-bottom:7px}
-.setup-field input{width:100%;border:1.5px solid #CDD5FD;border-radius:10px;padding:12px 14px;font-family:'Sohne','Space Grotesk',sans-serif;font-size:15px;color:var(--navy);outline:none;transition:border-color 0.15s;background:var(--light)}
+.setup-field input{width:100%;border:1.5px solid #CDD5FD;border-radius:10px;padding:12px 14px;font-family:'Space Grotesk',sans-serif;font-size:15px;color:var(--navy);outline:none;transition:border-color 0.15s;background:var(--light)}
 .setup-field input:focus{border-color:var(--blue);background:#fff}
 .setup-hint{font-size:11.5px;color:#7a9ab5;margin-top:5px;font-weight:500}
-.btn-start{width:100%;background:var(--blue);color:#fff;border:none;border-radius:12px;padding:15px;font-family:'Sohne','Space Grotesk',sans-serif;font-size:16px;font-weight:700;cursor:pointer;letter-spacing:0.5px;transition:background 0.15s,transform 0.1s;margin-top:6px}
+.btn-start{width:100%;background:var(--blue);color:#fff;border:none;border-radius:12px;padding:15px;font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;cursor:pointer;letter-spacing:0.5px;transition:background 0.15s,transform 0.1s;margin-top:6px}
 .btn-start:hover{background:var(--blue-dark)}
 .btn-start:active{transform:scale(0.98)}
 .btn-start:disabled{background:#CDD5FD;color:rgba(55,88,249,0.5);cursor:not-allowed}
@@ -54,23 +56,22 @@ body{font-family:'Sohne','Space Grotesk',sans-serif;background:var(--dark);min-h
 .top-bar{display:flex;align-items:center;justify-content:space-between;width:100%;max-width:700px;margin-bottom:16px}
 .top-left .nv-label{font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase}
 .player-name-display{font-size:15px;font-weight:700;color:var(--text-on-navy)}
-.btn-settings{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:var(--text-muted);border-radius:8px;padding:7px 13px;font-family:'Sohne','Space Grotesk',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:background 0.15s}
+.btn-settings{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:var(--text-muted);border-radius:8px;padding:7px 13px;font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:background 0.15s}
 .btn-settings:hover{background:rgba(255,255,255,0.15);color:#fff}
 
 .title-block{text-align:center;margin-bottom:18px}
-.game-title{font-size:clamp(50px,10vw,82px);font-weight:900;color:#fff;letter-spacing:14px;line-height:1}
-.game-title .dot{color:var(--blue)}
-.game-subtitle{font-size:11.5px;color:var(--text-muted);letter-spacing:1px;margin-top:4px;font-weight:600}
+.game-bingo{font-family:'Space Grotesk',sans-serif;font-size:clamp(13px,1.6vw,16px);font-weight:600;color:rgba(255,255,255,0.85);letter-spacing:9px;line-height:1;margin-top:12px;text-transform:uppercase;padding-left:9px}
+.game-subtitle{font-size:11.5px;color:var(--text-muted);letter-spacing:1px;margin-top:8px;font-weight:600}
 
-.board-wrap{background:rgba(255,255,255,0.04);border-radius:16px;padding:14px;border:1px solid rgba(55,88,249,0.25);width:100%;max-width:700px}
+.board-wrap{background:rgba(0,9,44,0.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:16px;padding:14px;border:1px solid rgba(255,255,255,0.18);width:100%;max-width:700px}
 .col-headers{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:6px}
 .col-header{font-size:clamp(26px,5vw,40px);font-weight:900;color:#fff;text-align:center;line-height:1;letter-spacing:2px}
 .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
 
-.cell{background:rgba(255,255,255,0.92);border-radius:9px;padding:9px 7px;min-height:90px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:clamp(8.5px,1.35vw,10.5px);font-weight:600;color:var(--dark);cursor:pointer;border:2px solid transparent;position:relative;transition:transform 0.15s,border-color 0.15s,background 0.15s;line-height:1.35;user-select:none}
-.cell:hover:not(.done):not(.free){background:#fff;border-color:var(--blue);transform:scale(1.025)}
-.cell.free{background:var(--blue);color:#fff;font-size:15px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:default;border-color:rgba(255,255,255,0.2)}
-.cell.done{background:#fdf0f0;cursor:default;border-color:#f8c8c8;pointer-events:none}
+.cell{background:rgba(255,255,255,0.78);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-radius:9px;padding:9px 7px;min-height:90px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:clamp(8.5px,1.35vw,10.5px);font-weight:600;color:var(--dark);cursor:pointer;border:2px solid transparent;position:relative;transition:transform 0.15s,border-color 0.15s,background 0.15s;line-height:1.35;user-select:none}
+.cell:hover:not(.done):not(.free){background:rgba(255,255,255,0.95);border-color:var(--blue);transform:scale(1.025)}
+.cell.free{background:var(--blue);color:#fff;font-family:'Arizona Mix',serif;font-size:17px;font-weight:500;letter-spacing:1px;text-transform:uppercase;cursor:default;border-color:rgba(255,255,255,0.2)}
+.cell.done{background:rgba(253,240,240,0.85);cursor:default;border-color:#f8c8c8;pointer-events:none}
 .cell-text{position:relative;z-index:1}
 .cell.done .cell-text{opacity:0.35;text-decoration:line-through;font-size:clamp(7.5px,1.1vw,9.5px)}
 
@@ -114,14 +115,14 @@ body{font-family:'Sohne','Space Grotesk',sans-serif;background:var(--dark);min-h
 .chip .cx{cursor:pointer;opacity:0.5;font-size:14px;line-height:1;flex-shrink:0}
 .chip .cx:hover{opacity:1}
 
-textarea{width:100%;border:1.5px solid #CDD5FD;border-radius:10px;padding:11px 13px;font-family:'Sohne','Space Grotesk',sans-serif;font-size:13.5px;color:var(--navy);resize:none;outline:none;min-height:80px;background:var(--light);transition:border-color 0.15s}
+textarea{width:100%;border:1.5px solid #CDD5FD;border-radius:10px;padding:11px 13px;font-family:'Space Grotesk',sans-serif;font-size:13.5px;color:var(--navy);resize:none;outline:none;min-height:80px;background:var(--light);transition:border-color 0.15s}
 textarea:focus{border-color:var(--blue)}
 
 .m-actions{display:flex;gap:10px;margin-top:14px}
-.btn-ok{flex:1;background:var(--blue);color:#fff;border:none;border-radius:10px;padding:12px;font-family:'Sohne','Space Grotesk',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:background 0.15s}
+.btn-ok{flex:1;background:var(--blue);color:#fff;border:none;border-radius:10px;padding:12px;font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:background 0.15s}
 .btn-ok:hover{background:var(--blue-dark)}
 .btn-ok:disabled{background:#CDD5FD;color:rgba(55,88,249,0.5);cursor:not-allowed}
-.btn-cancel{background:transparent;color:rgba(55,88,249,0.5);border:1.5px solid #CDD5FD;border-radius:10px;padding:12px 16px;font-family:'Sohne','Space Grotesk',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:border-color 0.15s,color 0.15s}
+.btn-cancel{background:transparent;color:rgba(55,88,249,0.5);border:1.5px solid #CDD5FD;border-radius:10px;padding:12px 16px;font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:border-color 0.15s,color 0.15s}
 .btn-cancel:hover{border-color:var(--blue);color:var(--blue)}
 
 .upload-error{color:var(--red);font-size:12px;font-weight:600;margin-top:4px}
@@ -138,6 +139,12 @@ textarea:focus{border-color:var(--blue)}
 </head>
 <body>
 
+<!-- BACKGROUND VIDEO -->
+<video id="bgVideo" autoplay muted loop playsinline>
+  <source src="BackgroundVideo.mov" type="video/mp4">
+</video>
+<div id="bgOverlay"></div>
+
 <!-- BINGO BANNER -->
 <div class="bingo-banner" id="banner">
   BINGO!
@@ -151,9 +158,8 @@ textarea:focus{border-color:var(--blue)}
 <div id="setupScreen">
   <div class="setup-card">
     <div class="setup-logo">
-      <div class="nv-wordmark">nextiva</div>
-      <div class="game-name">X<span class="dot">&middot;</span>B<span class="dot">&middot;</span>E<span class="dot">&middot;</span>R<span class="dot">&middot;</span>T</div>
-      <div class="tagline">Sales Challenge &middot; Bingo Game</div>
+      <img src="XBERT Logo.webp" alt="Nextiva XBERT" class="xbert-logo">
+      <div class="bingo-word">B&middot;I&middot;N&middot;G&middot;O</div>
     </div>
     <div class="setup-divider"></div>
     <div class="setup-field">
@@ -180,7 +186,8 @@ textarea:focus{border-color:var(--blue)}
   </div>
 
   <div class="title-block">
-    <div class="game-title">X<span class="dot">&middot;</span>B<span class="dot">&middot;</span>E<span class="dot">&middot;</span>R<span class="dot">&middot;</span>T</div>
+    <img src="XBERT Logo.webp" alt="Nextiva XBERT" class="xbert-logo-sm" style="filter:brightness(0) invert(1)">
+    <div class="game-bingo">B&middot;I&middot;N&middot;G&middot;O</div>
     <div class="game-subtitle">Click a square &middot; Add a comment &middot; Upload proof &middot; Win</div>
   </div>
 
@@ -227,7 +234,7 @@ textarea:focus{border-color:var(--blue)}
     <div style="font-size:17px;font-weight:800;color:var(--navy);margin-bottom:18px">Update your details</div>
     <div class="setup-field">
       <label style="font-size:11.5px;font-weight:700;color:#3a5a7a;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:7px">Your name</label>
-      <input type="text" id="editName" style="width:100%;border:1.5px solid #CDD5FD;border-radius:10px;padding:12px 14px;font-family:'Sohne','Space Grotesk',sans-serif;font-size:15px;color:var(--navy);outline:none;background:#F8F8F6">
+      <input type="text" id="editName" style="width:100%;border:1.5px solid #CDD5FD;border-radius:10px;padding:12px 14px;font-family:'Space Grotesk',sans-serif;font-size:15px;color:var(--navy);outline:none;background:#F8F8F6">
     </div>
     <div class="m-actions" style="margin-top:18px">
       <button class="btn-ok" onclick="saveSettings()">Save changes</button>
@@ -278,7 +285,7 @@ const TASKS=[
 
 const FREE=12;
 
-// Win conditions: rows, columns, diagonals only
+// Win conditions: rows, columns, diagonals, four corners, blackout
 const WIN_GROUPS={
   "Row 1":[0,1,2,3,4],
   "Row 2":[5,6,7,8,9],
@@ -291,7 +298,9 @@ const WIN_GROUPS={
   "Column 4":[3,8,13,18,23],
   "Column 5":[4,9,14,19,24],
   "Diagonal ↘":[0,6,12,18,24],
-  "Diagonal ↗":[4,8,12,16,20]
+  "Diagonal ↗":[4,8,12,16,20],
+  "Four Corners":[0,4,20,24],
+  "Blackout":Array.from({length:25},(_,i)=>i)
 };
 
 // Flat map for highlight tracking
