@@ -68,10 +68,10 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--dark);min-height:10
 .col-header{font-size:clamp(26px,5vw,40px);font-weight:900;color:#fff;text-align:center;line-height:1;letter-spacing:2px}
 .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
 
-.cell{background:rgba(255,255,255,0.78);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-radius:9px;padding:9px 7px;min-height:90px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:clamp(8.5px,1.35vw,10.5px);font-weight:600;color:var(--dark);cursor:pointer;border:2px solid transparent;position:relative;transition:transform 0.15s,border-color 0.15s,background 0.15s;line-height:1.35;user-select:none}
+.cell{background:rgba(255,255,255,0.62);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-radius:9px;padding:9px 7px;min-height:90px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:clamp(8.5px,1.35vw,10.5px);font-weight:600;color:var(--dark);cursor:pointer;border:2px solid transparent;position:relative;transition:transform 0.15s,border-color 0.15s,background 0.15s;line-height:1.35;user-select:none}
 .cell:hover:not(.done):not(.free){background:rgba(255,255,255,0.95);border-color:var(--blue);transform:scale(1.025)}
 .cell.free{background:var(--blue);color:#fff;font-family:'Arizona Mix',serif;font-size:17px;font-weight:500;letter-spacing:1px;text-transform:uppercase;cursor:default;border-color:rgba(255,255,255,0.2)}
-.cell.done{background:rgba(253,240,240,0.85);cursor:default;border-color:#f8c8c8;pointer-events:none}
+.cell.done{background:rgba(253,240,240,0.7);cursor:default;border-color:#f8c8c8;pointer-events:none}
 .cell-text{position:relative;z-index:1}
 .cell.done .cell-text{opacity:0.35;text-decoration:line-through;font-size:clamp(7.5px,1.1vw,9.5px)}
 
@@ -214,7 +214,7 @@ textarea:focus{border-color:var(--blue)}
     <textarea id="desc" placeholder="e.g. Closed a $750 MRR deal with ABC Corp on March 10 with XBert included..." rows="3"></textarea>
     <label class="m-label" style="margin-top:14px">Upload proof screenshot <span style="text-transform:none;letter-spacing:0;font-weight:500">(required)</span></label>
     <div class="upload-zone" id="uz">
-      <input type="file" id="fInput" multiple accept="image/*,.pdf,.doc,.docx,.txt">
+      <input type="file" id="fInput" multiple accept="image/*,.pdf,.doc,.docx,.txt,.csv,.xls,.xlsx,.ppt,.pptx">
       <div class="uz-icon">&#128206;</div>
       <div class="uz-text">Drop files here or <u onclick="document.getElementById('fInput').click()">browse</u></div>
       <div class="chips" id="chips"></div>
