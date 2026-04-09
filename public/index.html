@@ -68,7 +68,7 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--dark);min-height:10
 .col-header{font-size:clamp(26px,5vw,40px);font-weight:900;color:#fff;text-align:center;line-height:1;letter-spacing:2px}
 .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
 
-.cell{background:rgba(255,255,255,0.62);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-radius:9px;padding:9px 7px;min-height:90px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:clamp(8.5px,1.35vw,10.5px);font-weight:600;color:var(--dark);cursor:pointer;border:2px solid transparent;position:relative;transition:transform 0.15s,border-color 0.15s,background 0.15s;line-height:1.35;user-select:none}
+.cell{background:rgba(255,255,255,0.62);border-radius:9px;padding:9px 7px;min-height:90px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:clamp(8.5px,1.35vw,10.5px);font-weight:600;color:var(--dark);cursor:pointer;border:2px solid transparent;position:relative;transition:transform 0.15s,border-color 0.15s,background 0.15s;line-height:1.35;user-select:none}
 .cell:hover:not(.done):not(.free){background:rgba(255,255,255,0.95);border-color:var(--blue);transform:scale(1.025)}
 .cell.free{background:var(--blue);color:#fff;font-family:'Arizona Mix',serif;font-size:17px;font-weight:500;letter-spacing:1px;text-transform:uppercase;cursor:default;border-color:rgba(255,255,255,0.2)}
 .cell.done{background:rgba(253,240,240,0.7);cursor:default;border-color:#f8c8c8;pointer-events:none}
