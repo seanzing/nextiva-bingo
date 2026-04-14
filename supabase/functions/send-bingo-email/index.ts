@@ -71,11 +71,12 @@ serve(async (req) => {
 
       if (files && files.length > 0) {
         for (const file of files) {
-          const { data: urlData } = supabase.storage
+          // Use signed URLs (7 day expiry) so links work regardless of bucket visibility
+          const { data: urlData } = await supabase.storage
             .from("proof-files")
-            .getPublicUrl(`${safeEmail}/${cellIndex}/${file.name}`);
-          if (urlData?.publicUrl) {
-            proofLinks.push(`• Cell ${cellIndex + 1} (${TASKS[cellIndex]}): ${urlData.publicUrl}`);
+            .createSignedUrl(`${safeEmail}/${cellIndex}/${file.name}`, 60 * 60 * 24 * 7);
+          if (urlData?.signedUrl) {
+            proofLinks.push(`• Cell ${cellIndex + 1} (${TASKS[cellIndex]}): ${urlData.signedUrl}`);
           }
         }
       }

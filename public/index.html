@@ -214,7 +214,7 @@ textarea:focus{border-color:var(--blue)}
     <textarea id="desc" placeholder="e.g. Closed a $750 MRR deal with ABC Corp on March 10 with XBert included..." rows="3"></textarea>
     <label class="m-label" style="margin-top:14px">Upload proof screenshot <span style="text-transform:none;letter-spacing:0;font-weight:500">(required)</span></label>
     <div class="upload-zone" id="uz">
-      <input type="file" id="fInput" multiple accept="image/*,.pdf,.doc,.docx,.txt,.csv,.xls,.xlsx,.ppt,.pptx">
+      <input type="file" id="fInput" multiple>
       <div class="uz-icon">&#128206;</div>
       <div class="uz-text">Drop files here or <u onclick="document.getElementById('fInput').click()">browse</u></div>
       <div class="chips" id="chips"></div>
@@ -602,9 +602,11 @@ async function markDone(){
 
   try{
     // 1. Upload files to Supabase Storage
+    const safeEmail=playerEmail.replace('@','_at_').replace(/\./g,'_');
     for(const file of files){
-      const safeEmail=playerEmail.replace('@','_at_').replace(/\./g,'_');
-      const path=`${safeEmail}/${selIdx}/${file.name}`;
+      // Sanitize filename: replace spaces and special chars to avoid storage path errors
+      const safeName=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+      const path=`${safeEmail}/${selIdx}/${safeName}`;
       const {error:upErr}=await sb.storage
         .from('proof-files')
         .upload(path,file,{upsert:true});
